@@ -1,8 +1,6 @@
 
 local lfs = require("lfs")
-local function cls()
-	os.execute([[cls]])
-end
+
 local function getFolderStats(path)
     -- Initialize counters
     local totalSize = 0
@@ -196,27 +194,11 @@ local exeSettings = {
 	["HideConsole"] = arg[4]
 }
 
-cls()
-print([[Enter the path to the .bat file you wish to package into a .exe]])
-print([[All files and folders within the root directory of the .bat file will be packaged as well.]])
-print([[You can drag a folder into this window.]])
+
 
 exeSettings.batScriptPath = exeSettings.batScriptPath or io.read()
 exeSettings.batScriptPath = exeSettings.batScriptPath:gsub("\\","/"):gsub([["]],"")
-cls()
 
-if not arg[1] then
-	print([[Target File: ]]..exeSettings.batScriptPath)
-	-- Example usage
-	local path = string.match(exeSettings.batScriptPath, "(.+)/[^/]*$")
-	local totalSize, numFolders, numFiles = getFolderStats(path)
-	print("Total Size: " .. totalSize .. " bytes")
-	print("Folders: " .. numFolders)
-	print("Files: " .. numFiles)
-	print([[Add a password. (Encrypted with AES-256)]])
-	print([[Leave blank and press Enter to skip.]])
-	exeSettings.password = exeSettings.password or io.read()
-end
 
 
 if exeSettings.password == "" then
@@ -225,7 +207,7 @@ end
 if exeSettings.outputPath == "" then
 	exeSettings.outputPath = false
 end
-cls()
+
 generateEXE(exeSettings)
 
 
