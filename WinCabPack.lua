@@ -73,12 +73,16 @@ local function generateEXE(params)
     local runnerCode = [[
 
 @echo off
+title LOVE Console
 
 ]]..(Settings.password and [[
 powershell -window normal -command ""
 echo Please enter password.
 set /p password=
-powershell -window hidden -command ""
+
+]]..(params.HideConsole == "1" and [[
+powershell -window hidden -command ""]] or "")..[[
+
 ]]..zip7FileName..[[ x ]]..zipFileName..[[ -p:"%password%"]] or
 zip7FileName..[[ x ]]..zipFileName)..[[
 
@@ -105,7 +109,7 @@ Class=IEXPRESS
 SEDVersion=3
 [Options]
 PackagePurpose=InstallApp
-ShowInstallProgramWindow=]]..params.HideConsole..[[
+ShowInstallProgramWindow=]]..(Settings.password and "0" or params.HideConsole)..[[
 
 HideExtractAnimation=1
 UseLongFileName=1
