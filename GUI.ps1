@@ -223,8 +223,21 @@ $downloadBtn.Add_Click({
 		if ($arch -eq '32bit') { $url = $url -replace '64', '32' }
 	
 		$extractPath = "$env:TEMP\love-$version"
-		#Download selected version of love2d of it is not already in the temp folder
-		if (-not (Test-Path $extractPath)) {
+		
+		$needs_dowwnload = $False
+		
+		if ((Test-Path $extractPath)) {
+			$loveDir = Get-ChildItem -Path $extractPath | Where-Object { $_.PSIsContainer } | Select-Object -First 1
+			$loveExePath = Join-Path -Path $loveDir.FullName -ChildPath "love.exe"
+			if (-not (Test-Path $loveExePath)) {
+				Remove-Item -Path $extractPath -Force -Recurse
+				$needs_dowwnload = $True
+			}
+		} else {
+			$needs_dowwnload = $True
+		}
+		
+		if ($needs_dowwnload) {
 			$outputPath = "$env:TEMP\love-$version.zip"
 			Invoke-WebRequest -Uri $url -OutFile $outputPath
 			
