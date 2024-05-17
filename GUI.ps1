@@ -354,7 +354,7 @@ function LoadVersionInfo {
 					"LegalCopyright" { $textBoxLegalCopyright.Text = $matches[2] }
 					"OriginalFilename" { $textBoxOriginalFilename.Text = $matches[2] }
 					"ProductName" { $textBoxProductName.Text = $matches[2] }
-					"ProductVersion" { $textBoxProductVersionInfo.Text = $matches[2]; $textBoxProductVersion.Text = $matches[2].Replace(" ", "") -replace "\.", "," }
+					"ProductVersion" { $textBoxProductVersion.Text = $matches[2]; $textBoxProductVersion.Text = $matches[2].Replace(" ", "") -replace "\.", "," }
 				}
 			}
 		}
@@ -510,8 +510,6 @@ $textBoxOriginalFilename = CreateVersionInfoInput $form 'OriginalFilename:' $pos
 $position += 50
 $textBoxProductName = CreateVersionInfoInput $form 'ProductName:' $position
 $position += 50
-$textBoxProductVersionInfo = CreateVersionInfoInput $form 'ProductVersion (text):' $position
-$position += 50
 
 $form.Size = New-Object System.Drawing.Size(400, ($position + 150))
 
@@ -559,11 +557,12 @@ function replace_icon_and_version_info {
     $versionInfoRCPath = [System.IO.Path]::GetTempFileName() + ".rc"
 	$textBoxFileVersionComma = $textBoxFileVersion.Text
 	$textBoxFileVersionComma = EnsurePattern -inputString (TruncateAtFirstInvalidCharacter -inputString (TruncateAfterThirdComma -inputString ($textBoxFileVersionComma -replace "\.", ",")))
-	$textBoxProductVersion.Text = EnsurePattern -inputString (TruncateAtFirstInvalidCharacter -inputString (TruncateAfterThirdComma -inputString ($textBoxProductVersion.Text -replace "\.", ",")))
+	$textBoxProductVersionComma = $textBoxProductVersion.Text
+	$textBoxProductVersionComma = EnsurePattern -inputString (TruncateAtFirstInvalidCharacter -inputString (TruncateAfterThirdComma -inputString ($textBoxProductVersionComma -replace "\.", ",")))
     $versionInfoContent = @"
 1 VERSIONINFO
 FILEVERSION $($textBoxFileVersionComma)
-PRODUCTVERSION $($textBoxProductVersion.Text)
+PRODUCTVERSION $($textBoxProductVersionComma)
 FILEOS 0x40004
 FILETYPE 0x1
 {
@@ -578,7 +577,7 @@ BLOCK "StringFileInfo"
         VALUE "LegalCopyright", "$($textBoxLegalCopyright.Text)"
         VALUE "OriginalFilename", "$($textBoxOriginalFilename.Text)"
         VALUE "ProductName", "$($textBoxProductName.Text)"
-        VALUE "ProductVersion", "$($textBoxProductVersionInfo.Text)"
+        VALUE "ProductVersion", "$($textBoxProductVersion.Text)"
     }
 }
 
