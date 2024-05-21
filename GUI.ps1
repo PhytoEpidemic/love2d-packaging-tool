@@ -295,7 +295,7 @@ $create_package_button.Add_Click({
             $url = $versionInfo.download_links.windows.'64bit'
         }
 	
-		$extractPath = "$env:TEMP\love-$version"
+		$extractPath = "$env:APPDATA\love2d-packaging-tool\love-$version"
 		
 		$needs_dowwnload = $False
 		
@@ -322,7 +322,7 @@ $create_package_button.Add_Click({
 		$loveDir = Get-ChildItem -Path $extractPath | Where-Object { $_.PSIsContainer } | Select-Object -First 1
 		$loveExePath = Join-Path -Path $loveDir.FullName -ChildPath "love.exe"
 	
-		$zipPath = "$env:TEMP\thegame.zip"
+		$zipPath = "$env:TEMP\thelovegame.zip"
 		
 		$zipArguments = "a -tzip `"$zipPath`" `"$selectedFolder\*`""
 		Start-Process 7za.exe -ArgumentList $zipArguments -NoNewWindow -Wait
