@@ -1,0 +1,153 @@
+{
+  "versions": [
+    {
+      "version": "11.5",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.5/love-11.5-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "11.4",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.4/love-11.4-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.4/love-11.4-win32.zip"
+        }
+      }
+    },
+    {
+      "version": "11.3",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.3/love-11.3-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.3/love-11.3-win32.zip"
+        }
+      }
+    },
+    {
+      "version": "11.2",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.2/love-11.2-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.2/love-11.2-win32.zip"
+        }
+      }
+    },
+    {
+      "version": "11.1",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.1/love-11.1-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.1/love-11.1-win32.zip"
+        }
+      }
+    },
+    {
+      "version": "11.0",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/11.0/love-11.0-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/11.0/love-11.0-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "10.2",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.10.2/love-0.10.2-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.10.2/love-0.10.2-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "10.1",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.10.1/love-0.10.1-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.10.1/love-0.10.1-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "10.0",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.10.0/love-0.10.0-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.10.0/love-0.10.0-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "9.2",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.9.2/love-0.9.2-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.9.2/love-0.9.2-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "9.1",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.9.1/love-0.9.1-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.9.1/love-0.9.1-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "9.0",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.9.0/love-0.9.0-win64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.9.0/love-0.9.0-win32.zip"
+        }
+      }
+    },
+	{
+      "version": "8.0",
+      "download_links": {
+        "windows": {
+          "64bit": "https://github.com/love2d/love/releases/download/0.8.0/love-0.8.0-win-x64.zip",
+		  "32bit": "https://github.com/love2d/love/releases/download/0.8.0/love-0.8.0-win-x86.zip"
+        }
+      }
+    },
+	{
+      "version": "7.2",
+      "download_links": {
+        "windows": {
+		  "32bit": "https://github.com/love2d/love/releases/download/0.7.2/love-0.7.2-win-x86.zip"
+        }
+      }
+    },
+	{
+      "version": "7.1",
+      "download_links": {
+        "windows": {
+		  "32bit": "https://github.com/love2d/love/releases/download/0.7.1/love-0.7.1-win-x86.zip"
+        }
+      }
+    },
+	{
+      "version": "7.0",
+      "download_links": {
+        "windows": {
+		  "32bit": "https://github.com/love2d/love/releases/download/0.7.0/love-0.7.0-win-x86.zip"
+        }
+      }
+    },
+	{
+      "version": "6.2",
+      "download_links": {
+        "windows": {
+		  "32bit": "https://github.com/love2d/love/releases/download/0.6.2/love-0.6.2-win-x86.zip"
+        }
+      }
+    }
+  ]
+}

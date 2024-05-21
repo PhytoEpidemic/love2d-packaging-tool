@@ -78,14 +78,12 @@ $form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($iconPath)
 
 
 
-# Label for Password input
 $labelPassword = New-Object System.Windows.Forms.Label
 $labelPassword.Location = New-Object System.Drawing.Point(10,680)
 $labelPassword.Size = New-Object System.Drawing.Size(280,20)
 $labelPassword.Text = 'Enter a password (optional, cabinet file only):'
 $form.Controls.Add($labelPassword)
 
-# TextBox for Password input
 $textBoxPassword = New-Object System.Windows.Forms.TextBox
 $textBoxPassword.Location = New-Object System.Drawing.Point(10,700)
 $textBoxPassword.Size = New-Object System.Drawing.Size(300,20)
@@ -96,7 +94,7 @@ $form.Controls.Add($textBoxPassword)
 
 
 
-# WinCab_checkbox
+
 $WinCab_checkbox = New-Object System.Windows.Forms.checkbox
 $WinCab_checkbox.Location = New-Object System.Drawing.Point(10,720)
 $WinCab_checkbox.Size = New-Object System.Drawing.Size(150,20)
@@ -119,45 +117,115 @@ $form.Controls.Add($HideConsole_checkbox)
 
 Add-Tooltip -Control $HideConsole_checkbox -Text "Hide the love console when launching the game."
 
-# Label for version Dropdown
+$appDataDir = "$env:APPDATA\love2d-packaging-tool"
+$jsonFileName = "love_versions.json"
+$localBackupPath = $jsonFileName
+$jsonFilePath = Join-Path -Path $appDataDir -ChildPath $jsonFileName
+
+$githubUrl = "https://raw.githubusercontent.com/PhytoEpidemic/love2d-packaging-tool/main/love_versions.json" # Replace with your GitHub URL
+
+if (-not (Test-Path -Path $appDataDir)) {
+    New-Item -ItemType Directory -Path $appDataDir | Out-Null
+}
+
+function Download-JsonFile {
+    $tempFilePath = [System.IO.Path]::GetTempFileName()
+	try {
+        Invoke-WebRequest -Uri $githubUrl -OutFile $tempFilePath -ErrorAction Stop
+
+        $tempJsonContent = Get-Content -Raw -Path $tempFilePath
+        $tempJsonParsed = $tempJsonContent | ConvertFrom-Json
+
+        Copy-Item -Path $tempFilePath -Destination $jsonFilePath -Force
+    } catch {
+        Write-Host "Failed to download or verify JSON file. Using local backup."
+    } finally {
+        if (Test-Path -Path $tempFilePath) {
+            Remove-Item -Path $tempFilePath -Force
+        }
+    }
+}
+
+Download-JsonFile
+
+if (Test-Path -Path $jsonFilePath) {
+    $jsonFileToUse = $jsonFilePath
+} elseif (Test-Path -Path $localBackupPath) {
+    $jsonFileToUse = $localBackupPath
+}
+
+$jsonContent = Get-Content -Raw -Path $jsonFileToUse
+$loveVersions = $jsonContent | ConvertFrom-Json
+
+
+
 $labelVersionDropdown = New-Object System.Windows.Forms.Label
-$labelVersionDropdown.Location = New-Object System.Drawing.Point(200,745)
-$labelVersionDropdown.Size = New-Object System.Drawing.Size(80,20)
+$labelVersionDropdown.Location = New-Object System.Drawing.Point(200, 745)
+$labelVersionDropdown.Size = New-Object System.Drawing.Size(80, 20)
 $labelVersionDropdown.Text = 'Version:'
 $form.Controls.Add($labelVersionDropdown)
-# Dropdown for version selection
+
 $versionDropDown = New-Object System.Windows.Forms.ComboBox
-$versionDropDown.Location = New-Object System.Drawing.Point(200,770)
-$versionDropDown.Size = New-Object System.Drawing.Size(100,20)
-$versions = '11.5', '11.4', '11.3', '11.2', '11.1', '11.0', '0.10.2', '0.10.1', '0.10.0', '0.9.2', '0.9.1', '0.9.0'
-foreach ($version in $versions) { $versionDropDown.Items.Add($version) }
-$versionDropDown.SelectedItem = "11.5"
+$versionDropDown.Location = New-Object System.Drawing.Point(200, 770)
+$versionDropDown.Size = New-Object System.Drawing.Size(100, 20)
+$versionDropDown.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+
+foreach ($version in $loveVersions.versions) {
+    $versionDropDown.Items.Add($version.version)
+}
+
+$versionDropDown.SelectedIndex = 0
 $form.Controls.Add($versionDropDown)
 
-# Label for architecture Dropdown
-$labelarchitecture = New-Object System.Windows.Forms.Label
-$labelarchitecture.Location = New-Object System.Drawing.Point(320,745)
-$labelarchitecture.Size = New-Object System.Drawing.Size(80,20)
-$labelarchitecture.Text = 'Architecture:'
-$form.Controls.Add($labelarchitecture)
+$labelArchitecture = New-Object System.Windows.Forms.Label
+$labelArchitecture.Location = New-Object System.Drawing.Point(300, 745)
+$labelArchitecture.Size = New-Object System.Drawing.Size(80, 20)
+$labelArchitecture.Text = 'Architecture:'
+$form.Controls.Add($labelArchitecture)
 
-# Dropdown for architecture selection
 $archDropDown = New-Object System.Windows.Forms.ComboBox
-$archDropDown.Location = New-Object System.Drawing.Point(320,770)
-$archDropDown.Size = New-Object System.Drawing.Size(60,20)
-$archDropDown.Items.Add('32bit')
-$archDropDown.Items.Add('64bit')
-$archDropDown.SelectedItem = "64bit"
+$archDropDown.Location = New-Object System.Drawing.Point(300, 770)
+$archDropDown.Size = New-Object System.Drawing.Size(100, 20)
+$archDropDown.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
 $form.Controls.Add($archDropDown)
 
-# Label for Folder path textbox
+function Update-ArchitectureDropdown {
+    $selectedVersion = $versionDropDown.SelectedItem
+    
+	$prev_selection = $archDropDown.SelectedIndex
+	if ($archDropDown.Items.Count -eq 0) {
+		$prev_selection = 0
+	}
+	$archDropDown.Items.Clear()
+    $versionInfo = $loveVersions.versions | Where-Object { $_.version -eq $selectedVersion }
+    if ($versionInfo -ne $null) {
+        if ($versionInfo.download_links.windows.'64bit' -ne $null) {
+            $archDropDown.Items.Add('64bit')
+        }
+		if ($versionInfo.download_links.windows.'32bit' -ne $null) {
+            $archDropDown.Items.Add('32bit')
+        }
+        
+    }
+
+    
+    if ($archDropDown.Items.Count -gt $prev_selection) {
+        $archDropDown.SelectedIndex = $prev_selection
+	} else {
+        $archDropDown.SelectedIndex = 0
+    }
+}
+
+$versionDropDown.add_SelectedIndexChanged({ Update-ArchitectureDropdown })
+
+Update-ArchitectureDropdown
+
 $labelFolderTextBox = New-Object System.Windows.Forms.Label
 $labelFolderTextBox.Location = New-Object System.Drawing.Point(10,20)
 $labelFolderTextBox.Size = New-Object System.Drawing.Size(280,40)
 $labelFolderTextBox.Text = 'Choose the folder containing your game (where main.lua is located) You can drag and drop the folder into the text box.'
 $form.Controls.Add($labelFolderTextBox)
 
-# Folder browse button
 $folderBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
 $selectFolderBtn = New-Object System.Windows.Forms.Button
 $selectFolderBtn.Location = New-Object System.Drawing.Point(280,70)
@@ -165,7 +233,7 @@ $selectFolderBtn.Size = New-Object System.Drawing.Size(170,23)
 $selectFolderBtn.Text = 'Browse'
 
 $form.Controls.Add($selectFolderBtn)
-# TextBox for the folder path
+
 $folderPathTextBox = New-Object System.Windows.Forms.TextBox
 $folderPathTextBox.Location = New-Object System.Drawing.Point(10,70)
 $folderPathTextBox.Size = New-Object System.Drawing.Size(260,20)
@@ -193,12 +261,11 @@ $folderPathTextBox.Add_DragDrop({
 	}
 })
 
-# Create package button
-$downloadBtn = New-Object System.Windows.Forms.Button
-$downloadBtn.Location = New-Object System.Drawing.Point(10,770)
-$downloadBtn.Size = New-Object System.Drawing.Size(170,23)
-$downloadBtn.Text = 'Create Package'
-$downloadBtn.Add_Click({
+$create_package_button = New-Object System.Windows.Forms.Button
+$create_package_button.Location = New-Object System.Drawing.Point(10,770)
+$create_package_button.Size = New-Object System.Drawing.Size(170,23)
+$create_package_button.Text = 'Create Package'
+$create_package_button.Add_Click({
 	$saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
 	$saveFileDialog.Filter = 'Executable files (*.exe)|*.exe'
 	$selectedFolder = $folderPathTextBox.Text
@@ -219,8 +286,14 @@ $downloadBtn.Add_Click({
 		
 		$version = $versionDropDown.SelectedItem
 		$arch = $archDropDown.SelectedItem
-		$url = "https://github.com/love2d/love/releases/download/$version/love-$version-win64.zip"
-		if ($arch -eq '32bit') { $url = $url -replace '64', '32' }
+
+		$versionInfo = $loveVersions.versions | Where-Object { $_.version -eq $version }
+		
+        if ($arch -eq '32bit') {
+            $url = $versionInfo.download_links.windows.'32bit'
+        } elseif ($arch -eq '64bit') {
+            $url = $versionInfo.download_links.windows.'64bit'
+        }
 	
 		$extractPath = "$env:TEMP\love-$version"
 		
@@ -265,8 +338,6 @@ $downloadBtn.Add_Click({
 			New-Item -ItemType Directory -Path $tempBuildPath | Out-Null
 			
 		}
-		#$copyArgs = "/c copy /b `"$loveExePath`" + `"$zipPath`" `"$tempBuildEXEPath`""
-		#Start-Process -FilePath "cmd.exe" -ArgumentList $copyArgs -NoNewWindow -Wait
 
 		cmd /c copy /b "$loveExePath+$zipPath" "$tempBuildEXEPath"
 		replace_icon_and_version_info -exePath $tempBuildEXEPath -iconIndex "1"
@@ -309,14 +380,9 @@ $downloadBtn.Add_Click({
 		}
 		
 		
-		Get-ChildItem -Path $tempBuildPath -Filter "*.dll" | ForEach-Object {
-			#Remove-Item -Path $_.FullName -Force
-				
-		}
-		#Remove-Item -Path $tempBuildEXEPath -Force
 		Remove-Item -Path $tempBuildPath -Force -Recurse
-	
 		Remove-Item -Path $zipPath -Force
+		
 		if (Test-Path -Path $finalOutputPath) {
 			[System.Windows.Forms.MessageBox]::Show("Packaging in done! Output at: $finalOutputPath", "Complete", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)			
 		} else {
@@ -327,7 +393,7 @@ $downloadBtn.Add_Click({
 })
 
 
-$form.Controls.Add($downloadBtn)
+$form.Controls.Add($create_package_button)
 
 function LoadVersionInfo {
 	$openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -339,7 +405,8 @@ function LoadVersionInfo {
 		if ($fileExtension -eq ".exe") {
 			$tempRCPath = [System.IO.Path]::GetTempFileName() + ".rc"
 			$cmdArgsExtract = "-open `"$filePath`" -save `"$tempRCPath`" -action extract -mask VERSIONINFO,1,"
-			Start-Process -FilePath 'ResourceHacker.exe' -ArgumentList $cmdArgsExtract -NoNewWindow -Wait
+			$RHPath = "$env:APPDATA\love2d-packaging-tool\RH\ResourceHacker.exe"
+			Start-Process -FilePath $RHPath -ArgumentList $cmdArgsExtract -NoNewWindow -Wait
 			$filePath = $tempRCPath
 		}
 		
@@ -448,22 +515,19 @@ function EnsurePattern {
 
 
 
+function addResourceHackerComponent($form) {
 
-
-# Label for icon textbox
 $labelIcon = New-Object System.Windows.Forms.Label
 $labelIcon.Location = New-Object System.Drawing.Point(10,130)
 $labelIcon.Size = New-Object System.Drawing.Size(280,20)
 $labelIcon.Text = 'Icon Path:'
 $form.Controls.Add($labelIcon)
 
-# Textbox for icon
-$textboxIcon = New-Object System.Windows.Forms.TextBox
+$Global:textboxIcon = New-Object System.Windows.Forms.TextBox
 $textboxIcon.Location = New-Object System.Drawing.Point(10,150)
 $textboxIcon.Size = New-Object System.Drawing.Size(260,20)
 $form.Controls.Add($textboxIcon)
 
-# Button for browsing icon
 $buttonBrowseIcon = New-Object System.Windows.Forms.Button
 $buttonBrowseIcon.Location = New-Object System.Drawing.Point(280,150)
 $buttonBrowseIcon.Size = New-Object System.Drawing.Size(100,20)
@@ -494,25 +558,31 @@ function CreateVersionInfoInput($form, $labelText, $position) {
 }
 
 $position = 180
-$textBoxFileVersion = CreateVersionInfoInput $form 'FILEVERSION (e.g., 1.0.0.1):' $position
+$Global:textBoxFileVersion = CreateVersionInfoInput $form 'FILEVERSION (e.g., 1.0.0.1):' $position
 $position += 50
-$textBoxProductVersion = CreateVersionInfoInput $form 'PRODUCTVERSION (e.g., 1,0,0,1):' $position
+$Global:textBoxProductVersion = CreateVersionInfoInput $form 'PRODUCTVERSION (e.g., 1,0,0,1):' $position
 $position += 50
-$textBoxCompanyName = CreateVersionInfoInput $form 'CompanyName:' $position
+$Global:textBoxCompanyName = CreateVersionInfoInput $form 'CompanyName:' $position
 $position += 50
-$textBoxFileDescription = CreateVersionInfoInput $form 'FileDescription:' $position
+$Global:textBoxFileDescription = CreateVersionInfoInput $form 'FileDescription:' $position
 $position += 50
-$textBoxInternalName = CreateVersionInfoInput $form 'InternalName:' $position
+$Global:textBoxInternalName = CreateVersionInfoInput $form 'InternalName:' $position
 $position += 50
-$textBoxLegalCopyright = CreateVersionInfoInput $form 'LegalCopyright:' $position
+$Global:textBoxLegalCopyright = CreateVersionInfoInput $form 'LegalCopyright:' $position
 $position += 50
-$textBoxOriginalFilename = CreateVersionInfoInput $form 'OriginalFilename:' $position
+$Global:textBoxOriginalFilename = CreateVersionInfoInput $form 'OriginalFilename:' $position
 $position += 50
-$textBoxProductName = CreateVersionInfoInput $form 'ProductName:' $position
+$Global:textBoxProductName = CreateVersionInfoInput $form 'ProductName:' $position
 $position += 50
 
+$buttonLoadFromFile = New-Object System.Windows.Forms.Button
+$buttonLoadFromFile.Location = New-Object System.Drawing.Point(10, $position)
+$buttonLoadFromFile.Size = New-Object System.Drawing.Size(370, 30)
+$buttonLoadFromFile.Text = 'Load from file'
+$buttonLoadFromFile.Add_Click({ LoadVersionInfo })
+$form.Controls.Add($buttonLoadFromFile)
 $form.Size = New-Object System.Drawing.Size(400, ($position + 150))
-
+}
 
 function replace_icon_and_version_info {
     param (
@@ -520,10 +590,12 @@ function replace_icon_and_version_info {
 		[string]$iconIndex
 	)
     $iconPath = $textboxIcon.Text
-    $resourceHackerPath = 'ResourceHacker.exe'
-
+    $resourceHackerPath = "$env:APPDATA\love2d-packaging-tool\RH\ResourceHacker.exe"
+	if (-Not (Test-Path -Path $resourceHackerPath)) {
+		return $False
+	}
     $SuccessIcon = $False
-	
+	$exeTempPath = ($exePath + ".tmp")
 	if ($textboxIcon.Text -ne "") {
 		
 		$fileExtension = [System.IO.Path]::GetExtension($textboxIcon.Text)
@@ -534,7 +606,7 @@ function replace_icon_and_version_info {
             Start-Process $resourceHackerPath -ArgumentList $cmdArgsExtract -NoNewWindow -Wait
             $iconPath = $tempRCPath
         }
-		$exeTempPath = ($exePath + ".tmp")
+		
 
 		$cmdArgsReplaceIcon = "-open `"$exePath`" -save `"$exeTempPath`" -action addoverwrite -res `"$iconPath`" -mask ICONGROUP"
 		if (-Not $tempRCPath) {
@@ -553,8 +625,8 @@ function replace_icon_and_version_info {
 			}
 		}
 	}
-	# Prepare version info file
-    $versionInfoRCPath = [System.IO.Path]::GetTempFileName() + ".rc"
+    
+	$versionInfoRCPath = [System.IO.Path]::GetTempFileName() + ".rc"
 	$textBoxFileVersionComma = $textBoxFileVersion.Text
 	$textBoxFileVersionComma = EnsurePattern -inputString (TruncateAtFirstInvalidCharacter -inputString (TruncateAfterThirdComma -inputString ($textBoxFileVersionComma -replace "\.", ",")))
 	$textBoxProductVersionComma = $textBoxProductVersion.Text
@@ -590,12 +662,10 @@ BLOCK "VarFileInfo"
 
     $versionInfoContent | Out-File -FilePath $versionInfoRCPath -Encoding ASCII
 
-    # Compile the .rc file to .res
     $versionInfoResPath = $versionInfoRCPath.Replace('.rc', '.res')
     $cmdArgsCompile = "-open `"$versionInfoRCPath`" -save `"$versionInfoResPath`" -action compile -log NUL"
     Start-Process $resourceHackerPath -ArgumentList $cmdArgsCompile -NoNewWindow -Wait
     
-    # Replace version info using the compiled .res file
     $cmdArgsReplaceVersionInfo = "-open `"$exePath`" -save `"$exeTempPath`" -action addoverwrite -res `"$versionInfoResPath`" -mask VERSIONINFO,1,"
     Start-Process $resourceHackerPath -ArgumentList $cmdArgsReplaceVersionInfo -NoNewWindow -Wait
     $Success_Version_Info = $False
@@ -606,35 +676,133 @@ BLOCK "VarFileInfo"
 			$Success_Version_Info = $True
 		}
     }
-    # Cleanup temporary files
-    Remove-Item -Path $versionInfoRCPath
+    
+	Remove-Item -Path $versionInfoRCPath
     Remove-Item -Path $versionInfoResPath
-	if ($SuccessIcon) {
-		#[System.Windows.Forms.MessageBox]::Show("Icon replaced successfully!", "Success")
-	} elseif ($textboxIcon.Text -ne "") {
-		#[System.Windows.Forms.MessageBox]::Show("Icon failed to be replaced.", "Failed")
 
-	}
-	if ($Success_Version_Info) {
-		#[System.Windows.Forms.MessageBox]::Show("Version Info replaced successfully!", "Success")
-		
-	} else {
-		#[System.Windows.Forms.MessageBox]::Show("Version Info failed to be replaced.", "Failed")
-	}
     
 }
 
-# Button to load version info from file
-$buttonLoadFromFile = New-Object System.Windows.Forms.Button
-$buttonLoadFromFile.Location = New-Object System.Drawing.Point(10, $position)
-$buttonLoadFromFile.Size = New-Object System.Drawing.Size(370, 30)
-$buttonLoadFromFile.Text = 'Load from file'
-$buttonLoadFromFile.Add_Click({ LoadVersionInfo })
-$form.Controls.Add($buttonLoadFromFile)
 
 
 
 
 
-# Show the form
+function Show-LicenseAgreement {
+    param (
+        [string]$WindowTitle,
+        [string]$Header,
+        [string]$LicenseText
+    )
+
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = $WindowTitle
+    $form.Size = New-Object System.Drawing.Size(500, 400)
+    $form.StartPosition = "CenterScreen"
+	$form.MaximizeBox = $false
+	$form.MinimizeBox = $false
+	$form.AutoSize = $true
+	$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
+    
+	$headerLabel = New-Object System.Windows.Forms.Label
+    $headerLabel.Text = $Header
+    $headerLabel.Size = New-Object System.Drawing.Size(480, 20)
+    $headerLabel.Location = New-Object System.Drawing.Point(10, 10)
+    $form.Controls.Add($headerLabel)
+
+    $licenseTextBox = New-Object System.Windows.Forms.TextBox
+    $licenseTextBox.Multiline = $true
+    $licenseTextBox.ScrollBars = "Vertical"
+    $licenseTextBox.Text = $LicenseText
+    $licenseTextBox.Size = New-Object System.Drawing.Size(480, 260)
+    $licenseTextBox.Location = New-Object System.Drawing.Point(10, 40)
+    $licenseTextBox.ReadOnly = $true
+    $form.Controls.Add($licenseTextBox)
+
+    $acceptButton = New-Object System.Windows.Forms.Button
+    $acceptButton.Text = "Accept"
+    $acceptButton.Size = New-Object System.Drawing.Size(75, 23)
+    $acceptButton.Location = New-Object System.Drawing.Point(250, 310)
+    $acceptButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $form.Controls.Add($acceptButton)
+
+    $declineButton = New-Object System.Windows.Forms.Button
+    $declineButton.Text = "Decline"
+    $declineButton.Size = New-Object System.Drawing.Size(75, 23)
+    $declineButton.Location = New-Object System.Drawing.Point(350, 310)
+    $declineButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $form.Controls.Add($declineButton)
+
+    $result = $form.ShowDialog()
+
+    return $result
+}
+
+
+function DownloadRH($form, $DLButton) {
+	$windowTitle = "License Agreement"
+	$header = "Please read the following license agreement carefully."
+	$licenseText = @"
+You are downloading Resource HackerTM from https://www.angusj.com/resourcehacker/
+
+This Resource HackerTM software is released as freeware provided that you agree to the following terms and conditions:
+
+This software is not to be distributed via any website domain or any other media without the prior written approval of the copyright owner.
+
+This software is not to be used in any way to illegally modify software.
+
+DISCLAIMER: A user of this Resource HackerTM software acknowledges that he or she is receiving this software on an "as is" basis and the user is not relying on the accuracy or functionality of the software for any purpose. The user further acknowledges that any use of this software will be at the user's own risk and the copyright owner accepts no responsibility whatsoever arising from the use or application of the software.
+
+"@
+
+	$result = Show-LicenseAgreement -WindowTitle $windowTitle -Header $header -LicenseText $licenseText
+	
+	if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+		$filePath = "$env:APPDATA\love2d-packaging-tool\RH\ResourceHacker.exe"
+		$zipUrl = "https://www.angusj.com/resourcehacker/resource_hacker.zip"
+		$destinationFolder = "$env:APPDATA\love2d-packaging-tool\RH"
+		$zipFilePath = "$env:TEMP\resource_hacker.zip"
+		Invoke-WebRequest -Uri $zipUrl -OutFile $zipFilePath
+	
+		if (-Not (Test-Path -Path $destinationFolder)) {
+			New-Item -ItemType Directory -Path $destinationFolder | Out-Null
+		}
+	
+		Add-Type -AssemblyName System.IO.Compression.FileSystem
+		[System.IO.Compression.ZipFile]::ExtractToDirectory($zipFilePath, $destinationFolder)
+	
+		Remove-Item -Path $zipFilePath
+	
+		$form.Controls.Remove($DLButton)
+		addResourceHackerComponent $form
+	}
+	
+	
+}
+
+
+
+$filePath = "$env:APPDATA\love2d-packaging-tool\RH\ResourceHacker.exe"
+
+if (-Not (Test-Path -Path $filePath)) {
+	$addRHGUIoptions = New-Object System.Windows.Forms.Button
+	$addRHGUIoptions.Location = New-Object System.Drawing.Point(10, 180)
+	$addRHGUIoptions.Size = New-Object System.Drawing.Size(370, 30)
+	$addRHGUIoptions.Text = 'Download ResourceHacker'
+	$addRHGUIoptions.Add_Click({ DownloadRH $form $addRHGUIoptions })
+	$form.Controls.Add($addRHGUIoptions)
+	
+} else {
+    Write-Host "ResourceHacker.exe already exists."
+	addResourceHackerComponent $form
+}
+
+
+
+
 $form.ShowDialog()
+
+
